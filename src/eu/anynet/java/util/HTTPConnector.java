@@ -41,9 +41,6 @@ public class HTTPConnector {
       this.client = new DefaultHttpClient();
       this.responseHandler = new BasicResponseHandler();
       this.client.getParams().setParameter("http.useragent", "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.13 (KHTML, like Gecko) Chrome/9.0.597.98 Safari/534.13");
-
-      //SchemeRegistry schemeRegistry = client.getConnectionManager().getSchemeRegistry();
-      //schemeRegistry.register(new Scheme("https", new TlsSniSocketFactory(), 443));
    }
 
    public void close()
@@ -51,6 +48,7 @@ public class HTTPConnector {
       this.client.close();
       this.client = null;
    }
+   
 
    public HttpResponse doGet(String url, String referer, HashMap<String,String> headers) throws IOException {
       HttpGet httpget = new HttpGet(url);
@@ -102,36 +100,28 @@ public class HTTPConnector {
        return this.responseToString(response);
    }
 
+   public String getHeaderValue(HttpResponse response, String header) {
+      Header headervalue = response.getFirstHeader(header);
+      if(headervalue!=null) {
+         return headervalue.getValue();
+      } else {
+         throw new IllegalArgumentException("Der Header wurde nicht gefunden!");
+      }
+   }
 
+   public int getStatusCode(HttpResponse response) {
+      return response.getStatusLine().getStatusCode();
+   }
 
-
-
-	public String getHeaderValue(HttpResponse response, String header) {
-		Header headervalue = response.getFirstHeader(header);
-		if(headervalue!=null) {
-			return headervalue.getValue();
-		} else {
-			throw new IllegalArgumentException("Der Header wurde nicht gefunden!");
-		}
-	}
-
-
-
-	public int getStatusCode(HttpResponse response) {
-		return response.getStatusLine().getStatusCode();
-	}
-
-
-
-	public boolean isRedirect(HttpResponse response) {
-		boolean redirect = response.getParams().isParameterTrue("http.protocol.handle-redirects");
-		int responsecode = ((int)(this.getStatusCode(response)/10));
-		if(responsecode==30 && redirect==true) {
-			return true;
-		} else {
-			return false;
-		}
-	}
+   public boolean isRedirect(HttpResponse response) {
+      boolean redirect = response.getParams().isParameterTrue("http.protocol.handle-redirects");
+      int responsecode = ((int)(this.getStatusCode(response)/10));
+      if(responsecode==30 && redirect==true) {
+         return true;
+      } else {
+         return false;
+      }
+   }
 
 
 
