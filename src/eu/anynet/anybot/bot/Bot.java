@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.PircBot;
+import org.jibble.pircbot.User;
 
 /**
  *
@@ -72,6 +73,23 @@ public class Bot extends PircBot
       return this.autoreconnect;
    }
 
+   public boolean isChannelOperator(String channel, String nick)
+   {
+      User[] users = this.getUsers(channel);
+      for(User user : users)
+      {
+         if(user.getNick().equals(nick))
+         {
+            if(user.isOp())
+            {
+               return true;
+            }
+            break;
+         }
+      }
+      return false;
+   }
+
    @Override
    public void onMessage(String channel, String sender, String login, String hostname, String message)
    {
@@ -87,7 +105,6 @@ public class Bot extends PircBot
          listener.onMessage(newmsg);
       }
    }
-
 
    @Override
    public void onConnect()
@@ -191,6 +208,12 @@ public class Bot extends PircBot
       }
    }
 
+   @Override
+   protected void handleLine(String line)
+   {
+      super.handleLine(line);
+      System.out.println("[DEBUG] ("+this.getServer()+") "+line);
+   }
 
 
 }

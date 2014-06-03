@@ -6,6 +6,7 @@ package eu.anynet.anybot.bot;
 
 import eu.anynet.java.util.ArgumentInterface;
 import eu.anynet.java.util.Arguments;
+import eu.anynet.java.util.Regex;
 
 /**
  *
@@ -123,6 +124,13 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
       return (this.isChannelSet()==false && this.isNickSet());
    }
 
+   public boolean isBotAsked()
+   {
+      String msgnick = this.get(0);
+      String nick = this.getBot().getNick();
+      return Regex.isRegexTrue(msgnick, "^"+Regex.quote(nick)+"[:,]$");
+   }
+
    public void respond(String message, boolean action) throws UnsupportedOperationException
    {
       if(this.isChannelSet())
@@ -136,6 +144,14 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
       else
       {
          throw new UnsupportedOperationException("No channel and no nick available");
+      }
+   }
+
+   public void respondNotice(String notice)
+   {
+      if(this.isNickSet())
+      {
+         this.getBot().sendNotice(this.getNick(), notice);
       }
    }
 

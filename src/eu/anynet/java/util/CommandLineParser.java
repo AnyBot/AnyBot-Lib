@@ -22,7 +22,7 @@ public class CommandLineParser {
          this.commandLineListenerList.add(newl);
       }
    }
-   
+
    public synchronized void removeCommandLineListener(CommandLineListener l)
    {
       if(this.commandLineListenerList.contains(l))
@@ -30,14 +30,14 @@ public class CommandLineParser {
          this.commandLineListenerList.remove(l);
       }
    }
-   
+
    public String[] consumeMessageQueue()
    {
       String[] queue = this.messagequeue.toArray(new String[this.messagequeue.size()]);
       this.messagequeue.clear();
       return queue;
    }
-   
+
    public void handleCommandLine(String line)
    {
       this.handleCommandLine(new CommandLineEvent(line));
@@ -68,7 +68,7 @@ public class CommandLineParser {
             }
          }
       }
-      
+
       return (i>0);
    }
 
