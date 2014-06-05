@@ -100,7 +100,7 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
 
    @Override
    public String get(int start, int end) {
-      return this.get(start, end);
+      return this.args.get(start, end);
    }
 
 
@@ -127,8 +127,8 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
    public boolean isBotAsked()
    {
       String msgnick = this.get(0);
-      String nick = this.getBot().getNick();
-      return Regex.isRegexTrue(msgnick, "^"+Regex.quote(nick)+"[:,]$");
+      String currnick = this.getBot().getNick();
+      return Regex.isRegexTrue(msgnick, "^"+Regex.quote(currnick)+"[:,]$");
    }
 
    public void respond(String message, boolean action) throws UnsupportedOperationException

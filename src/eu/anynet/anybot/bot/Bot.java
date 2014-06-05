@@ -19,6 +19,7 @@ public class Bot extends PircBot
 
    private ArrayList<Module> modules = new ArrayList<>();
    private boolean autoreconnect=false;
+   private String debugChannel;
 
 
    public Bot(String ident, String realname, String ctcpfinger) {
@@ -38,6 +39,36 @@ public class Bot extends PircBot
    }
 
 
+
+   public void setDebugChannel(String channel)
+   {
+      if(channel==null || channel.trim().length()<1)
+      {
+         this.debugChannel=null;
+      }
+      else if(channel.startsWith("#") && channel.length()>1)
+      {
+         this.debugChannel = channel;
+      }
+   }
+
+   public String getDebugChannel()
+   {
+      return this.debugChannel;
+   }
+
+   public boolean isDebugChannelSet()
+   {
+      return (this.debugChannel!=null && this.debugChannel.startsWith("#") && this.debugChannel.length()>1);
+   }
+
+   public void sendDebug(String message)
+   {
+      if(this.isDebugChannelSet())
+      {
+         this.sendMessage(this.getDebugChannel(), message);
+      }
+   }
 
    public void addModule(Module newmod)
    {
@@ -93,16 +124,19 @@ public class Bot extends PircBot
    @Override
    public void onMessage(String channel, String sender, String login, String hostname, String message)
    {
-      ChatMessage newmsg = new ChatMessage(this);
-      newmsg.setChannel(channel);
-      newmsg.setNick(sender);
-      newmsg.setIdent(login);
-      newmsg.setHost(hostname);
-      newmsg.setMessage(message);
+      if(!(channel!=null && this.getDebugChannel()!=null && channel.equals(this.getDebugChannel())))
+      {
+         ChatMessage newmsg = new ChatMessage(this);
+         newmsg.setChannel(channel);
+         newmsg.setNick(sender);
+         newmsg.setIdent(login);
+         newmsg.setHost(hostname);
+         newmsg.setMessage(message);
 
-      ArrayList<Module> locallist = this.cloneModuleList();
-      for (Module listener : locallist) {
-         listener.onMessage(newmsg);
+         ArrayList<Module> locallist = this.cloneModuleList();
+         for (Module listener : locallist) {
+            listener.onMessage(newmsg);
+         }
       }
    }
 
@@ -208,12 +242,13 @@ public class Bot extends PircBot
       }
    }
 
+   /*
    @Override
    protected void handleLine(String line)
    {
       super.handleLine(line);
       System.out.println("[DEBUG] ("+this.getServer()+") "+line);
    }
-
+   */
 
 }
