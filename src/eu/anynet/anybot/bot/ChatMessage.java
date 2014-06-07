@@ -23,9 +23,9 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
    private Arguments args;
 
 
-   public ChatMessage(Bot bot)
+   public ChatMessage(Bot bot, Network networksettings)
    {
-      super(bot);
+      super(bot, networksettings);
    }
 
 
@@ -129,6 +129,28 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
       String msgnick = this.get(0);
       String currnick = this.getBot().getNick();
       return Regex.isRegexTrue(msgnick, "^"+Regex.quote(currnick)+"[:,]$");
+   }
+
+   public boolean isMatch(String regex)
+   {
+      int start = this.isBotAsked() ? 1 : 0;
+      return Regex.isRegexTrue(this.get(start, -1, " "), regex);
+   }
+
+   public String getResponseTarget()
+   {
+      if(this.isNickSet() && !this.isChannelSet())
+      {
+         return this.getNick();
+      }
+      else if(this.isChannelSet())
+      {
+         return this.getChannel();
+      }
+      else
+      {
+         return null;
+      }
    }
 
    public void respond(String message, boolean action) throws UnsupportedOperationException

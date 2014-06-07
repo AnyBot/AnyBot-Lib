@@ -20,22 +20,14 @@ public class Bot extends PircBot
    private ArrayList<Module> modules = new ArrayList<>();
    private boolean autoreconnect=false;
    private String debugChannel;
+   private final Network networksettings;
 
-
-   public Bot(String ident, String realname, String ctcpfinger) {
-      this.setLogin(ident);
-      this.setVersion(realname);
-      this.setFinger(ctcpfinger);
-   }
-
-   public Bot(String ident)
+   public Bot(Network networksettings)
    {
-      this(ident, ident, ident);
-   }
-
-   public Bot()
-   {
-      this("anybot", "anybot-0.0", "anybot-0.0");
+      this.networksettings = networksettings;
+      this.setLogin(this.networksettings.getBotIdent());
+      this.setVersion(this.networksettings.getBotRealname());
+      this.setFinger("AnyBot 1.0");
    }
 
 
@@ -126,7 +118,7 @@ public class Bot extends PircBot
    {
       if(!(channel!=null && this.getDebugChannel()!=null && channel.equals(this.getDebugChannel())))
       {
-         ChatMessage newmsg = new ChatMessage(this);
+         ChatMessage newmsg = new ChatMessage(this, this.networksettings);
          newmsg.setChannel(channel);
          newmsg.setNick(sender);
          newmsg.setIdent(login);
@@ -146,7 +138,7 @@ public class Bot extends PircBot
       //System.out.println("Connected!");
       ArrayList<Module> locallist = this.cloneModuleList();
       for (Module listener : locallist) {
-         listener.onConnect(new ChatEvent(this));
+         listener.onConnect(new ChatEvent(this, this.networksettings));
       }
    }
 
@@ -173,14 +165,14 @@ public class Bot extends PircBot
 
       ArrayList<Module> locallist = this.cloneModuleList();
       for (Module listener : locallist) {
-         listener.onDisconnect(new ChatEvent(this));
+         listener.onDisconnect(new ChatEvent(this, this.networksettings));
       }
    }
 
    @Override
    public void onInvite(String targetNick, String sourceNick, String sourceLogin, String sourceHostname, String channel)
    {
-      ChatMessage newmsg = new ChatMessage(this);
+      ChatMessage newmsg = new ChatMessage(this, this.networksettings);
       newmsg.setChannel(channel);
       newmsg.setNick(sourceNick);
       newmsg.setIdent(sourceLogin);
@@ -196,7 +188,7 @@ public class Bot extends PircBot
    @Override
    protected void onJoin(String channel, String sender, String login, String hostname)
    {
-      ChatMessage newmsg = new ChatMessage(this);
+      ChatMessage newmsg = new ChatMessage(this, this.networksettings);
       newmsg.setChannel(channel);
       newmsg.setNick(sender);
       newmsg.setIdent(login);
@@ -212,7 +204,7 @@ public class Bot extends PircBot
    @Override
    protected void onPart(String channel, String sender, String login, String hostname)
    {
-      ChatMessage newmsg = new ChatMessage(this);
+      ChatMessage newmsg = new ChatMessage(this, this.networksettings);
       newmsg.setChannel(channel);
       newmsg.setNick(sender);
       newmsg.setIdent(login);
@@ -228,7 +220,7 @@ public class Bot extends PircBot
    @Override
    protected void onKick(String channel, String kickerNick, String kickerLogin, String kickerHostname, String recipientNick, String reason)
    {
-      ChatMessage newmsg = new ChatMessage(this);
+      ChatMessage newmsg = new ChatMessage(this, this.networksettings);
       newmsg.setChannel(channel);
       newmsg.setNick(kickerNick);
       newmsg.setIdent(kickerLogin);

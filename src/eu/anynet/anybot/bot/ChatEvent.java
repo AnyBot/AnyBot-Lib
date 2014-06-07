@@ -11,14 +11,21 @@ package eu.anynet.anybot.bot;
 public class ChatEvent {
 
    private Bot bot;
+   private Network networksettings;
 
-   public ChatEvent(Bot bot) {
+   public ChatEvent(Bot bot, Network networksettings) {
       this.bot = bot;
+      this.networksettings = networksettings;
    }
 
    public Bot getBot()
    {
       return this.bot;
+   }
+
+   public Network getNetworkSettings()
+   {
+      return this.networksettings;
    }
 
    public void sendMessage(String channelornick, String message, boolean action)

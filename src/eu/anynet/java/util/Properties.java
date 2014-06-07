@@ -17,28 +17,30 @@ import java.util.HashMap;
 public class Properties
 {
 
-   private HashMap<String,String> properties;
+   public static final Properties properties = new Properties();
+
+   private HashMap<String,String> propvalues;
 
    public Properties()
    {
-      this.properties = new HashMap<>();
+      this.propvalues = new HashMap<>();
    }
 
    public ArrayList<String> getKeySet()
    {
       ArrayList<String> result = new ArrayList<>();
-      result.addAll(this.properties.keySet());
+      result.addAll(this.propvalues.keySet());
       return result;
    }
 
    public void set(String key, String value)
    {
-      this.properties.put(key, value);
+      this.propvalues.put(key, value);
    }
 
    public String get(String key)
    {
-      return this.properties.get(key);
+      return this.propvalues.get(key);
    }
 
    public int getInt(String key)

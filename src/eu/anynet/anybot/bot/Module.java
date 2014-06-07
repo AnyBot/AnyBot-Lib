@@ -17,6 +17,7 @@ public abstract class Module
    private Properties properties;
    private boolean isenabled;
    private Bot bot;
+   private ModuleInfo moduleinfo;
 
    public void onConnect(final ChatEvent msg) {  }
 
@@ -31,6 +32,15 @@ public abstract class Module
    public void onMessage(final ChatMessage msg) {  }
 
    public void onInvite(final ChatMessage msg) {  }
+
+
+   public ModuleInfo getModuleinfo() {
+      return moduleinfo;
+   }
+
+   public void setModuleinfo(ModuleInfo moduleinfo) {
+      this.moduleinfo = moduleinfo;
+   }
 
    public boolean isEnabled()
    {
@@ -65,7 +75,7 @@ public abstract class Module
       this.bot = b;
    }
 
-   protected Bot getBot()
+   public Bot getBot()
    {
       if(this.bot==null)
       {
