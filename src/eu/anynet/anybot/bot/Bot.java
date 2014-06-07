@@ -17,7 +17,7 @@ import org.jibble.pircbot.User;
 public class Bot extends PircBot
 {
 
-   private ArrayList<Module> modules = new ArrayList<>();
+   private final ArrayList<Module> modules = new ArrayList<>();
    private boolean autoreconnect=false;
    private String debugChannel;
    private final Network networksettings;
@@ -31,6 +31,10 @@ public class Bot extends PircBot
    }
 
 
+   public Network getNetworkSettings()
+   {
+      return this.networksettings;
+   }
 
    public void setDebugChannel(String channel)
    {

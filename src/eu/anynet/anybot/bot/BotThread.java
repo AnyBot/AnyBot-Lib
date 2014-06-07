@@ -80,7 +80,8 @@ public class BotThread extends Thread
             {
                try {
                   // Init classloader
-                  URLClassLoader loader = URLClassLoader.newInstance(mod.getJarURLs());
+                  URL[] jars = mod.getJarURLs();
+                  URLClassLoader loader = URLClassLoader.newInstance(jars);
 
                   // Find main class
                   ResourceBundle props = ResourceBundle.getBundle("anybotmodule", Locale.getDefault(), loader);

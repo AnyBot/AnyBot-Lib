@@ -12,8 +12,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -52,6 +50,11 @@ public class ModuleInfo
       File modsettingsfolder = new File(this.settingsfolder.getAbsolutePath()+File.separator+modulename+File.separator);
       modsettingsfolder.mkdirs();
       return modsettingsfolder;
+   }
+   
+   public File getModuleFolder()
+   {
+      return new File(this.modulefile.getParent()+File.separator+this.getName()+File.separator);
    }
 
    /*
@@ -128,8 +131,10 @@ public class ModuleInfo
          int i=1;
          for(String dependency : dependencies)
          {
+            String temp = dependency.replaceAll("\\{\\{moduledir\\}\\}", this.getModuleFolder().getAbsolutePath());
+            
             try {
-               urls[i] = (new File(dependency)).toURI().toURL();
+               urls[i] = (new File(temp)).toURI().toURL();
             } catch (MalformedURLException ex) {
                urls[i] = null;
             }
