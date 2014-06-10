@@ -6,30 +6,53 @@ package eu.anynet.anybot.bot;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import org.jibble.pircbot.IrcException;
-import org.jibble.pircbot.PircBot;
-import org.jibble.pircbot.User;
+import org.pircbotx.Channel;
+import org.pircbotx.Configuration;
+import org.pircbotx.PircBotX;
+import org.pircbotx.UtilSSLSocketFactory;
+import org.pircbotx.cap.TLSCapHandler;
+import org.pircbotx.exception.IrcException;
 
 /**
  *
  * @author sim
  */
-public class Bot extends PircBot
+public class Bot extends PircBotX
 {
 
    private final ArrayList<Module> modules = new ArrayList<>();
-   private boolean autoreconnect=false;
    private String debugChannel;
    private final Network networksettings;
 
-   public Bot(Network networksettings)
+   public static Configuration createConfigFromNetworkSettings(Network networksettings)
    {
-      this.networksettings = networksettings;
-      this.setLogin(this.networksettings.getBotIdent());
-      this.setVersion(this.networksettings.getBotRealname());
-      this.setFinger("AnyBot 1.0");
+      Configuration config = new Configuration.Builder()
+              .setLogin(networksettings.getBotIdent())
+              .setVersion(networksettings.getBotRealname())
+              .setFinger("AnyBot 1.0")
+              .setName(networksettings.getBotNickname())
+              .setServerHostname(networksettings.getHost())
+              .setServerPort(networksettings.getPort())
+              //.addCapHandler(new TLSCapHandler(new UtilSSLSocketFactory().trustAllCertificates(), true))
+              .setAutoReconnect(true)
+              .setCapEnabled(true)
+              .buildConfiguration();
+
+      return config;
    }
 
+   public Bot(Configuration config, Network networksettings) throws IOException, IrcException
+   {
+      super(config);
+      this.networksettings = networksettings;
+      this.debugChannel = this.networksettings.getDebugChannel();
+   }
+
+   public void addListener(Module module)
+   {
+      module.setBot(this);
+      this.getConfiguration().getListenerManager().addListener(module);
+   }
 
    public Network getNetworkSettings()
    {
@@ -62,7 +85,7 @@ public class Bot extends PircBot
    {
       if(this.isDebugChannelSet())
       {
-         this.sendMessage(this.getDebugChannel(), message);
+         this.sendIRC().message(this.getDebugChannel(), message);
       }
    }
 
@@ -75,47 +98,24 @@ public class Bot extends PircBot
       }
    }
 
+   public boolean isBotInChannel(String channel)
+   {
+      for(Channel c : this.getUserBot().getChannels().asList())
+      {
+         if(c.getName().equals(channel))
+         {
+            return true;
+         }
+      }
+      return false;
+   }
+
    private synchronized ArrayList<Module> cloneModuleList()
    {
       return (ArrayList<Module>) this.modules.clone();
    }
 
-   public void enableAutoReconnect(boolean b)
-   {
-      this.autoreconnect = b;
-   }
-
-   public void enableAutoReconnect()
-   {
-      this.enableAutoReconnect(true);
-   }
-
-   public void disableAutoReconnect()
-   {
-      this.enableAutoReconnect(false);
-   }
-
-   public boolean isAutoReconnectEnabled()
-   {
-      return this.autoreconnect;
-   }
-
-   public boolean isChannelOperator(String channel, String nick)
-   {
-      User[] users = this.getUsers(channel);
-      for(User user : users)
-      {
-         if(user.getNick().equals(nick))
-         {
-            if(user.isOp())
-            {
-               return true;
-            }
-            break;
-         }
-      }
-      return false;
-   }
+   /*
 
    @Override
    public void onMessage(String channel, String sender, String login, String hostname, String message)
@@ -237,6 +237,7 @@ public class Bot extends PircBot
          listener.onKick(newmsg);
       }
    }
+   */
 
    /*
    @Override

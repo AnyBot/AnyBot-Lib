@@ -11,14 +11,26 @@ package eu.anynet.java.util;
 abstract public class TimerTask {
 
    private boolean isstarted;
+   private boolean skipfirst;
    private Thread worker;
    private final long millis;
 
    public TimerTask(final long millis)
    {
+      this(millis, false);
+   }
+
+   public TimerTask(final long millis, boolean skipfirst)
+   {
       this.isstarted = false;
+      this.skipfirst = false;
       this.worker = null;
       this.millis = millis;
+   }
+
+   public boolean isRunning()
+   {
+      return this.worker!=null && this.worker.isAlive() && !this.worker.isInterrupted();
    }
 
    public void start()
@@ -38,8 +50,17 @@ abstract public class TimerTask {
             {
                while(true)
                {
+                  if(me.skipfirst==false)
+                  {
+                     Thread.sleep(millis);
+                  }
+                  else
+                  {
+                     me.skipfirst = false;
+                  }
+
                   me.doWork();
-                  Thread.sleep(millis);
+
                }
             }
             catch(InterruptedException ex)

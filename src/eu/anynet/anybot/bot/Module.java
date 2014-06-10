@@ -4,42 +4,42 @@
  */
 package eu.anynet.anybot.bot;
 
+import eu.anynet.anybot.pircbotxextensions.MessageEventEx;
 import eu.anynet.java.util.Properties;
 import eu.anynet.java.util.Regex;
+import org.pircbotx.hooks.ListenerAdapter;
+import org.pircbotx.hooks.events.MessageEvent;
 
 /**
  *
  * @author sim
  */
-public abstract class Module
+public abstract class Module extends ListenerAdapter<Bot>
 {
 
    private Properties properties;
    private boolean isenabled;
    private Bot bot;
    private ModuleInfo moduleinfo;
-
-   public void onConnect(final ChatEvent msg) {  }
-
-   public void onDisconnect(final ChatEvent msg) {  }
-
-   public void onJoin(final ChatMessage msg) {  }
-
-   public void onPart(final ChatMessage msg) {  }
-
-   public void onKick(final ChatMessage msg) {  }
-
-   public void onMessage(final ChatMessage msg) {  }
-
-   public void onInvite(final ChatMessage msg) {  }
+   private Network networksettings;
 
 
-   public ModuleInfo getModuleinfo() {
+   public ModuleInfo getModuleinfo()
+   {
       return moduleinfo;
    }
 
-   public void setModuleinfo(ModuleInfo moduleinfo) {
+   public void setModuleinfo(ModuleInfo moduleinfo)
+   {
       this.moduleinfo = moduleinfo;
+   }
+
+   public Network getNetworksettings() {
+      return networksettings;
+   }
+
+   public void setNetworksettings(Network networksettings) {
+      this.networksettings = networksettings;
    }
 
    public boolean isEnabled()
@@ -65,6 +65,7 @@ public abstract class Module
    }
 
    public void launch() {  }
+   public void dispose() {  }
 
    public void setBot(final Bot b)
    {
@@ -90,5 +91,14 @@ public abstract class Module
       String newrgx = "^"+qnick+"[:,]\\s+"+regex;
       return newrgx;
    }
+
+   @Override
+   public void onMessage(MessageEvent<Bot> event) throws Exception
+   {
+      MessageEventEx ex = new MessageEventEx(event.getBot(), event.getChannel(), event.getUser(), event.getMessage());
+      this.onMessage(ex);
+   }
+
+   public void onMessage(MessageEventEx event) throws Exception {  }
 
 }

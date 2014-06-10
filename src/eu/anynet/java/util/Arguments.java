@@ -19,6 +19,11 @@ public class Arguments {
 
    public Arguments(String argstring)
    {
+      this.setArgString(argstring);
+   }
+
+   public void setArgString(String argstring)
+   {
       this.argstring = argstring.trim();
       while(this.argstring.indexOf("  ")>-1)
       {
@@ -71,6 +76,21 @@ public class Arguments {
    public String get(int start, int end)
    {
       return this.get(start, end, " ");
+   }
+
+   public boolean isMatch(String regex)
+   {
+      return Regex.isRegexTrue(this.get(0, -1, " "), regex);
+   }
+
+   public boolean isPartNumeric(int i)
+   {
+      return Regex.isRegexTrue(this.get(i), "^[0-9]+$");
+   }
+
+   public int getInt(int i)
+   {
+      return Integer.parseInt(this.get(i));
    }
 
 }

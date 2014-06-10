@@ -34,6 +34,20 @@ public class Regex {
         return results;
     }
 
+    public static ArrayList<String> findAllGroupsByRegex(String regex, String search)
+    {
+      Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(search);
+
+		matcher.find();
+      ArrayList<String> row = new ArrayList<>();
+      for(int i=1; i<=matcher.groupCount(); i++) {
+          row.add(matcher.group(i));
+      }
+
+      return row;
+    }
+
     public static String findByRegex(String regex, String search, int match, int group) {
         Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(search);
@@ -128,8 +142,8 @@ public class Regex {
    {
       return Pattern.quote(str);
    }
-   
-   
+
+
    public static String replace(String rgx, String str, String replacement)
    {
       Pattern pattern = Pattern.compile(rgx);

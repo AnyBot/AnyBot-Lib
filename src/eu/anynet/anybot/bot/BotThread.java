@@ -4,6 +4,8 @@
  */
 package eu.anynet.anybot.bot;
 
+import com.google.common.collect.ImmutableList;
+import eu.anynet.anybot.pircbotxextensions.MessageEventEx;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
@@ -12,12 +14,21 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jibble.pircbot.IrcException;
+import org.pircbotx.Configuration;
+import org.pircbotx.PircBotX;
+import org.pircbotx.User;
+import org.pircbotx.exception.IrcException;
+import org.pircbotx.hooks.Listener;
+import org.pircbotx.hooks.events.ConnectEvent;
+import org.pircbotx.hooks.events.JoinEvent;
+import org.pircbotx.hooks.events.KickEvent;
+import org.pircbotx.hooks.events.PartEvent;
+import org.pircbotx.hooks.events.UserListEvent;
 
 /**
  *
@@ -50,9 +61,9 @@ public class BotThread extends Thread
 
    private void writePipeLine(String message)
    {
-      if(this.network.isDebugChannelSet())
+      if(this.bot!=null && this.bot.isConnected() && this.network.isDebugChannelSet())
       {
-         this.bot.sendMessage(this.network.getDebugChannel(), message);
+         this.bot.sendIRC().message(this.network.getDebugChannel(), message);
       }
 
       try {
@@ -68,8 +79,9 @@ public class BotThread extends Thread
       try
       {
          final BotThread me = this;
-         this.bot = new Bot(this.network);
-         this.bot.setDebugChannel(this.network.getDebugChannel());
+         Configuration config = Bot.createConfigFromNetworkSettings(this.network);
+
+         this.bot = new Bot(config, me.network);
 
          // http://www.informatik-forum.at/showthread.php?66277-Java-Plugin-System-mit-jar-Dateien
          ModuleInfo[] mods = ModuleUtils.getModules();
@@ -91,9 +103,11 @@ public class BotThread extends Thread
                   Module sub = (Module) loader.loadClass(isubClassName).newInstance();
                   sub.mergeProperties(properties);
                   sub.setModuleinfo(mod);
+                  sub.setNetworksettings(me.network);
 
                   // Add to thread and launch!
-                  this.bot.addModule(sub);
+                  this.bot.addListener(sub);
+                  //config.getListenerManager().addListener(sub);
                   sub.launch();
 
                   me.writePipeLine("Load module successfull: "+mod.getName());
@@ -110,15 +124,14 @@ public class BotThread extends Thread
          }
 
 
-
          // TODO: Put this in a module class
-         this.bot.addModule(new Module()
+         this.bot.addListener(new Module()
          {
 
             @Override
-            public void onConnect(ChatEvent ev) {
+            public void onConnect(ConnectEvent<Bot> event) throws Exception
+            {
                me.writePipeLine("Connected!");
-               me.bot.changeNick(me.network.getBotNickname());
 
                // Startup Commands
                if(me.network.getAfterConnectCommands().length>0)
@@ -126,14 +139,14 @@ public class BotThread extends Thread
                   for(IRCCommand cmd : me.network.getAfterConnectCommands())
                   {
                      String cmdstr = cmd.buildRawCommand();
-                     me.bot.sendRawLine(cmdstr);
+                     event.getBot().sendRaw().rawLineNow(cmdstr);
                   }
                }
 
                // Join Debug Channel
                if(me.network.isDebugChannelSet())
                {
-                  me.bot.joinChannel(me.network.getDebugChannel());
+                  event.getBot().sendIRC().joinChannel(me.network.getDebugChannel());
                }
 
                // Join stored channels
@@ -143,68 +156,89 @@ public class BotThread extends Thread
                   for(String channel : joinedchannels)
                   {
                      me.writePipeLine("Join "+channel);
-                     if(!Arrays.asList(ev.getBot().getChannels()).contains(channel))
+                     if(!event.getBot().isBotInChannel(channel))
                      {
-                        ev.getBot().joinChannel(channel);
+                        event.getBot().sendIRC().joinChannel(channel);
                      }
                   }
                }
-
             }
 
             @Override
-            public void onInvite(ChatMessage msg) {
-               if(msg.getBot().getNick().equals(msg.getMessage()))
+            public void onUserList(UserListEvent<Bot> event) throws Exception
+            {
+               for(User user : event.getUsers().asList())
                {
-                  String chan = msg.getChannel();
-                  //String source = msg.getNick();
+                  String name = user.getNick();
+               }
+            }
 
-                  if(msg.getHost().equals("sim4000.off.users.iZ-smart.net") || (chan!=null && me.network.getDebugChannel()!=null && chan.equals(me.network.getDebugChannel())))
-                  {
-                     msg.getBot().joinChannel(chan);
-                  }
-                  else
-                  {
-                     msg.respondNotice("Access denied!");
-                  }
-               }
-            }
+
+
+            /*
             @Override
-            public void onJoin(ChatMessage msg) {
-               if(msg.getNick().equals(msg.getBot().getNick())) {
-                  me.network.addJoinedChannel(msg.getChannel());
+            public void onInvite(InviteEvent<Bot> event) throws Exception
+            {
+            if(event.getBot().getNick().equals(event.getUser()))
+            {
+            String chan = event.getChannel();
+            if(msg.getHost().equals("sim4000.off.users.iZ-smart.net") || (chan!=null && me.network.getDebugChannel()!=null && chan.equals(me.network.getDebugChannel())))
+            {
+            msg.getBot().sendIRC().joinChannel(chan);
+            }
+            else
+            {
+            msg.respondNotice("Access denied!");
+            }
+            }
+            }
+             */
+
+            @Override
+            public void onJoin(JoinEvent<Bot> event) throws Exception
+            {
+               if(event.getUser().getNick().equals(event.getBot().getNick())) {
+                  me.network.addJoinedChannel(event.getChannel().getName());
                   me.network.serialize();
                }
             }
+
             @Override
-            public void onPart(ChatMessage msg) {
-               if(msg.getNick().equals(msg.getBot().getNick())) {
-                  me.network.removeJoinedChannel(msg.getChannel());
+            public void onPart(PartEvent<Bot> event) throws Exception
+            {
+               if(event.getUser().getNick().equals(event.getBot().getNick())) {
+                  me.network.removeJoinedChannel(event.getChannel().getName());
                   me.network.serialize();
                }
             }
+
             @Override
-            public void onKick(ChatMessage msg) {
-               if(msg.getRecipient().equals(msg.getBot().getNick()))
+            public void onKick(KickEvent<Bot> event) throws Exception
+            {
+               if(event.getRecipient().getNick().equals(event.getBot().getNick()))
                {
-                  me.network.removeJoinedChannel(msg.getChannel());
+                  me.network.removeJoinedChannel(event.getChannel().getName());
                   me.network.serialize();
                }
             }
+
          });
 
-         this.bot.addModule(new Module() {
+         this.bot.addListener(new Module()
+         {
+
             @Override
-            public void onMessage(ChatMessage msg) {
-               if(msg.isBotAsked() && msg.count()>1 && msg.get(1).equalsIgnoreCase("version"))
+            public void onMessage(MessageEventEx event) throws Exception
+            {
+               if(event.args().isBotAsked() && event.args().count()>1 && event.args().get(0).equalsIgnoreCase("version"))
                {
-                  msg.respond(properties.get("versionstring"));
+                  event.respond(properties.get("versionstring"));
                }
             }
+
          });
 
-         this.bot.enableAutoReconnect();
-         this.bot.connect(this.network.getHost());
+         this.bot.startBot();
 
          CommandLineParser parser = new CommandLineParser();
 
@@ -213,7 +247,7 @@ public class BotThread extends Thread
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
                me.writePipeLine("Join "+chan);
-               bot.joinChannel(chan);
+               bot.sendIRC().joinChannel(chan);
             }
          });
 
@@ -221,29 +255,30 @@ public class BotThread extends Thread
             @Override
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
-               bot.partChannel(chan);
+               //bot.partChannel(chan);
+               bot.sendRaw().rawLineNow("PART "+chan);
             }
          });
 
          parser.addCommandLineListener(new CommandLineListener("^quit") {
             @Override
             public void handleCommand(CommandLineEvent e) {
-               bot.disableAutoReconnect();
-               bot.quitServer("The bot is shutting down!");
+               bot.stopBotReconnect();
+               bot.sendIRC().quitServer("The bot is shutting down!");
             }
          });
 
          parser.addCommandLineListener(new CommandLineListener("^msg") {
             @Override
             public void handleCommand(CommandLineEvent e) {
-               bot.sendMessage(e.get(1), e.get(2, -1, " "));
+               bot.sendIRC().message(e.get(1), e.get(2, -1, " "));
             }
          });
 
          parser.addCommandLineListener(new CommandLineListener("^raw") {
             @Override
             public void handleCommand(CommandLineEvent e) {
-               bot.sendRawLineViaQueue(e.get(1, -1, " "));
+               bot.sendRaw().rawLineNow(e.get(1, -1, " "));
             }
          });
 
@@ -257,9 +292,11 @@ public class BotThread extends Thread
       {
 
       }
-      catch (IOException | IrcException ex)
+      catch (IOException ex)
       {
          this.writePipeLine("Error: "+ex.getMessage());
+      } catch (IrcException ex) {
+         Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
       }
    }
 
@@ -269,8 +306,8 @@ public class BotThread extends Thread
       if(this.bot.isConnected())
       {
          this.writePipeLine("Thread exited.");
-         this.bot.quitServer("Bot is shutting down!");
-         this.bot.dispose();
+         this.bot.stopBotReconnect();
+         this.bot.sendIRC().quitServer("Bot is shutting down!");
       }
       super.interrupt();
    }
