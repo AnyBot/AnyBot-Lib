@@ -64,5 +64,10 @@ public class MessageEventEx extends MessageEvent<Bot>
       return this.args().isBotAsked();
    }
 
+   public void respondNoHighlight(String message)
+   {
+      this.getBot().sendIRC().message(this.getResponseTarget(), message);
+   }
+
 
 }

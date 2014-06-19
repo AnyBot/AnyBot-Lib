@@ -4,15 +4,15 @@
  */
 package eu.anynet.java.twitter;
 
-import eu.anynet.java.util.HTTPConnector;
+import eu.anynet.java.util.HttpClient;
 import eu.anynet.java.util.Serializable;
-import java.util.HashMap;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.client.fluent.Form;
+import org.apache.http.client.fluent.Request;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 
 /**
  *
@@ -20,7 +20,7 @@ import org.json.simple.JSONValue;
  */
 @XmlRootElement(name = "TwitterApiCredentials")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class TwitterApiCredentials extends Serializable
+public class TwitterApiCredentials extends Serializable<TwitterApiCredentials>
 {
 
    private String applicationApiKey;
@@ -61,17 +61,13 @@ public class TwitterApiCredentials extends Serializable
    {
       if(!this.isBearerTokenAvailable())
       {
-         HashMap<String,String> headers = new HashMap<>();
-         headers.put("Authorization", "Basic "+this.getBasicToken());
+         try
+         {
 
-         HashMap<String,String> params = new HashMap<>();
-         params.put("grant_type", "client_credentials");
+            Request request = HttpClient.Post("https://api.twitter.com/oauth2/token", Form.form().add("grant_type", "client_credentials"))
+               .addHeader("Authorization", "Basic "+this.getBasicToken());
 
-         HTTPConnector client = new HTTPConnector();
-         String content = null;
-         try {
-            content = client.responseToString(client.doPost("https://api.twitter.com/oauth2/token", params, headers));
-            JSONObject bearer_json = (JSONObject)JSONValue.parse(content);
+            JSONObject bearer_json = HttpClient.toJsonObject(request);
             String access_token = bearer_json.get("access_token").toString();
 
             if(access_token!=null && access_token.length()>0)
@@ -82,8 +78,7 @@ public class TwitterApiCredentials extends Serializable
                return true;
             }
          } catch(Exception ex) {
-         } finally {
-            client.close();
+            ex.printStackTrace();
          }
       }
       return false;
@@ -93,17 +88,13 @@ public class TwitterApiCredentials extends Serializable
    {
       if(this.isBearerTokenAvailable())
       {
-         HashMap<String,String> headers = new HashMap<>();
-         headers.put("Authorization", "Basic "+this.getBasicToken());
+         try
+         {
 
-         HashMap<String,String> params = new HashMap<>();
-         params.put("access_token", this.getBearerToken());
+            Request request = HttpClient.Post("https://api.twitter.com/oauth2/invalidate_token", Form.form().add("access_token", this.getBearerToken()))
+               .addHeader("Authorization", "Basic "+this.getBasicToken());
 
-         HTTPConnector client = new HTTPConnector();
-         String content = null;
-         try {
-            content = client.responseToString(client.doPost("https://api.twitter.com/oauth2/invalidate_token", params, headers));
-            JSONObject bearer_json = (JSONObject)JSONValue.parse(content);
+            JSONObject bearer_json = HttpClient.toJsonObject(request);
             String access_token = bearer_json.get("access_token").toString();
 
             if(access_token!=null && access_token.length()>0)
@@ -113,8 +104,7 @@ public class TwitterApiCredentials extends Serializable
                return true;
             }
          } catch(Exception ex) {
-         } finally {
-            client.close();
+            ex.printStackTrace();
          }
       }
       return false;

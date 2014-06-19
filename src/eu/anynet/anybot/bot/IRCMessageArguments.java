@@ -23,15 +23,22 @@ public class IRCMessageArguments extends Arguments
    {
       super(argstring);
       this.botnickname = null;
-      ArrayList<String> groups = Regex.findAllGroupsByRegex("^("+Regex.quote(botnick)+")[,:] (.*)$", argstring);
 
-      if(groups.size()>1)
-      {
-         this.botnickname = groups.get(0);
-         String msg = groups.get(1);
-         this.setArgString(msg);
+      try {
+         ArrayList<String> groups = Regex.findAllGroupsByRegex("^("+Regex.quote(botnick)+")[,:] (.*)$", argstring);
+
+         if(groups.size()>1)
+         {
+            this.botnickname = groups.get(0);
+            String msg = groups.get(1);
+            this.setArgString(msg);
+         }
+         else
+         {
+            this.setArgString(argstring);
+         }
       }
-      else
+      catch(java.lang.IllegalStateException ex)
       {
          this.setArgString(argstring);
       }

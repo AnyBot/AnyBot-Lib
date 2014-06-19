@@ -4,8 +4,8 @@
  */
 package eu.anynet.anybot.bot;
 
-import com.google.common.collect.ImmutableList;
 import eu.anynet.anybot.pircbotxextensions.MessageEventEx;
+import eu.anynet.java.uax.UaxApi;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
@@ -14,16 +14,13 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.pircbotx.Configuration;
-import org.pircbotx.PircBotX;
 import org.pircbotx.User;
 import org.pircbotx.exception.IrcException;
-import org.pircbotx.hooks.Listener;
 import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.KickEvent;
@@ -230,9 +227,30 @@ public class BotThread extends Thread
             @Override
             public void onMessage(MessageEventEx event) throws Exception
             {
-               if(event.args().isBotAsked() && event.args().count()>1 && event.args().get(0).equalsIgnoreCase("version"))
+               if(event.args().isBotAsked() && event.args().count()>0 && event.args().get(0).equalsIgnoreCase("version"))
                {
                   event.respond(properties.get("versionstring"));
+               }
+               else if(event.args().isBotAsked() && event.args().count()>1 && event.args().get(0).equalsIgnoreCase("short"))
+               {
+                  UaxApi uax = UaxApi.initialize();
+                  if(uax==null)
+                  {
+                     event.respond("No api key defined");
+                  }
+                  else
+                  {
+                     String shortlink = uax.shortUrl(event.args().get(1));
+                     if(shortlink!=null)
+                     {
+                        event.respond(shortlink);
+                     }
+                     else
+                     {
+                        event.respond("Could not short link.");
+                     }
+                  }
+
                }
             }
 

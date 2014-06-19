@@ -93,8 +93,16 @@ public abstract class Module extends ListenerAdapter<Bot>
    }
 
    @Override
-   public void onMessage(MessageEvent<Bot> event) throws Exception
+   public final void onMessage(MessageEvent<Bot> event) throws Exception
    {
+      if(this.getNetworksettings()!=null &&
+              this.getNetworksettings().getDebugChannel()!=null &&
+              event.getChannel()!=null &&
+              this.getNetworksettings().getDebugChannel().equalsIgnoreCase(event.getChannel().getName()))
+      {
+         return;
+      }
+
       MessageEventEx ex = new MessageEventEx(event.getBot(), event.getChannel(), event.getUser(), event.getMessage());
       this.onMessage(ex);
    }
