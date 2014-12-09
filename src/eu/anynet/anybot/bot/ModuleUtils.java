@@ -71,5 +71,17 @@ public class ModuleUtils
       return names;
    }
 
+   public static String[] getModuleVersionStrings()
+   {
+      ModuleInfo[] infos = getModules();
+      String[] names = new String[infos.length];
+
+      for(int i=0; i<infos.length; i++)
+      {
+         names[i] = infos[i].getVersionString();
+      }
+      return names;
+   }
+
 
 }

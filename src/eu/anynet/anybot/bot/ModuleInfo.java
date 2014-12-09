@@ -57,26 +57,6 @@ public class ModuleInfo
       return new File(this.modulefile.getParent()+File.separator+this.getName()+File.separator);
    }
 
-   /*
-   public boolean createSettingsFolder()
-   {
-      File folder = this.getSettingsFolder();
-      if(folder.exists())
-      {
-         return true;
-      }
-      else
-      {
-         return folder.mkdirs();
-      }
-   }
-
-   public boolean isSettingsFolderExist()
-   {
-      return this.getSettingsFolder().exists() && this.getSettingsFolder().isDirectory();
-   }
-   */
-
    public String getResourceProperty(String key)
    {
       URLClassLoader loader = URLClassLoader.newInstance(new URL[] { this.toURL() });
@@ -103,6 +83,11 @@ public class ModuleInfo
       {
          return null;
       }
+   }
+
+   public String getVersionString()
+   {
+      return this.getName()+" "+this.getResourceProperty("VERSION")+" build "+this.getResourceProperty("BUILDNUMBER")+" ("+this.getResourceProperty("BUILDDATE")+")";
    }
 
    public URL toURL()

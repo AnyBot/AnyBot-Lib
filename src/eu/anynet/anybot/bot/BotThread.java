@@ -10,18 +10,22 @@ import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
 import static eu.anynet.java.util.Properties.properties;
+import eu.anynet.java.util.TimerTask;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.lang3.StringUtils;
 import org.pircbotx.Configuration;
 import org.pircbotx.User;
 import org.pircbotx.exception.IrcException;
 import org.pircbotx.hooks.events.ConnectEvent;
+import org.pircbotx.hooks.events.InviteEvent;
 import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.KickEvent;
 import org.pircbotx.hooks.events.PartEvent;
@@ -46,6 +50,11 @@ public class BotThread extends Thread
       this.setName("network-worker-"+network.getKey());
       this.pipes = new ThreadPipes();
       this.network = network;
+   }
+
+   public Network getNetwork()
+   {
+      return this.network;
    }
 
    public ThreadPipeEndpoint getPipeEndpoint()
@@ -102,7 +111,7 @@ public class BotThread extends Thread
                   Module sub = (Module) loader.loadClass(isubClassName).newInstance();
                   sub.mergeProperties(properties);
                   sub.setModuleinfo(mod);
-                  sub.setNetworksettings(me.network);
+                  sub.setThread(me);
 
                   // Add to thread and launch!
                   this.bot.addListener(sub);
@@ -142,10 +151,6 @@ public class BotThread extends Thread
                   }
                }
 
-               me.writePipeLine("Wait...");
-               Thread.sleep(3000);
-               me.writePipeLine("Wait done.");
-
                // Join Debug Channel
                if(me.network.isDebugChannelSet())
                {
@@ -168,39 +173,10 @@ public class BotThread extends Thread
             }
 
             @Override
-            public void onUserList(UserListEvent<Bot> event) throws Exception
-            {
-               for(User user : event.getUsers().asList())
-               {
-                  String name = user.getNick();
-               }
-            }
-
-
-
-            /*
-            @Override
-            public void onInvite(InviteEvent<Bot> event) throws Exception
-            {
-            if(event.getBot().getNick().equals(event.getUser()))
-            {
-            String chan = event.getChannel();
-            if(msg.getHost().equals("sim4000.off.users.iZ-smart.net") || (chan!=null && me.network.getDebugChannel()!=null && chan.equals(me.network.getDebugChannel())))
-            {
-            msg.getBot().sendIRC().joinChannel(chan);
-            }
-            else
-            {
-            msg.respondNotice("Access denied!");
-            }
-            }
-            }
-             */
-
-            @Override
             public void onJoin(JoinEvent<Bot> event) throws Exception
             {
-               if(event.getUser().getNick().equals(event.getBot().getNick())) {
+               if(event.getUser().getNick().equals(event.getBot().getNick()))
+               {
                   me.network.addJoinedChannel(event.getChannel().getName());
                   me.network.serialize();
                }
@@ -236,6 +212,10 @@ public class BotThread extends Thread
                if(event.args().isBotAsked() && event.args().count()>0 && event.args().get(0).equalsIgnoreCase("version"))
                {
                   event.respond(properties.get("versionstring"));
+               }
+               else if(event.args().isBotAsked() && event.args().count()>0 && event.args().get(0).equalsIgnoreCase("modules"))
+               {
+                  event.respond("Modules: "+StringUtils.join(ModuleUtils.getModuleVersionStrings(), ", "));
                }
                else if(event.args().isBotAsked() && event.args().count()>1 && event.args().get(0).equalsIgnoreCase("short"))
                {

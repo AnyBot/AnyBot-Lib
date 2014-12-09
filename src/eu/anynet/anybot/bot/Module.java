@@ -21,8 +21,7 @@ public abstract class Module extends ListenerAdapter<Bot>
    private boolean isenabled;
    private Bot bot;
    private ModuleInfo moduleinfo;
-   private Network networksettings;
-
+   private BotThread thread;
 
    public ModuleInfo getModuleinfo()
    {
@@ -34,12 +33,17 @@ public abstract class Module extends ListenerAdapter<Bot>
       this.moduleinfo = moduleinfo;
    }
 
-   public Network getNetworksettings() {
-      return networksettings;
+   public BotThread getThread() {
+      return thread;
    }
 
-   public void setNetworksettings(Network networksettings) {
-      this.networksettings = networksettings;
+   public void setThread(BotThread t) {
+      this.thread = t;
+   }
+
+   public Network getNetwork()
+   {
+      return this.getThread().getNetwork();
    }
 
    public boolean isEnabled()
@@ -95,10 +99,10 @@ public abstract class Module extends ListenerAdapter<Bot>
    @Override
    public final void onMessage(MessageEvent<Bot> event) throws Exception
    {
-      if(this.getNetworksettings()!=null &&
-              this.getNetworksettings().getDebugChannel()!=null &&
+      if(this.getThread()!=null &&
+              this.getThread().getNetwork().getDebugChannel()!=null &&
               event.getChannel()!=null &&
-              this.getNetworksettings().getDebugChannel().equalsIgnoreCase(event.getChannel().getName()))
+              this.getThread().getNetwork().getDebugChannel().equalsIgnoreCase(event.getChannel().getName()))
       {
          return;
       }

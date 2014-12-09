@@ -12,20 +12,27 @@ abstract public class TimerTask {
 
    private boolean isstarted;
    private boolean skipfirst;
+   private boolean single;
    private Thread worker;
    private final long millis;
 
    public TimerTask(final long millis)
    {
-      this(millis, false);
+      this(millis, false, false);
    }
 
    public TimerTask(final long millis, boolean skipfirst)
    {
-      this.isstarted = false;
-      this.skipfirst = false;
-      this.worker = null;
+      this(millis, false, false);
+   }
+
+   public TimerTask(final long millis, boolean skipfirst, boolean single)
+   {
       this.millis = millis;
+      this.skipfirst = skipfirst;
+      this.single = single;
+      this.isstarted = false;
+      this.worker = null;
    }
 
    public boolean isRunning()
@@ -61,6 +68,10 @@ abstract public class TimerTask {
 
                   me.doWork();
 
+                  if(me.single)
+                  {
+                     break;
+                  }
                }
             }
             catch(InterruptedException ex)
@@ -76,9 +87,13 @@ abstract public class TimerTask {
 
    public void stop()
    {
-      this.worker.interrupt();
-      this.worker=null;
-      this.isstarted=false;
+      if(this.isstarted==true && this.worker!=null &&
+         this.worker.isAlive() && !this.worker.isInterrupted())
+      {
+         this.worker.interrupt();
+         this.worker=null;
+         this.isstarted=false;
+      }
    }
 
    public void doWork()
