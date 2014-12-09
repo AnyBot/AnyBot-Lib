@@ -51,7 +51,7 @@ public class ModuleInfo
       modsettingsfolder.mkdirs();
       return modsettingsfolder;
    }
-   
+
    public File getModuleFolder()
    {
       return new File(this.modulefile.getParent()+File.separator+this.getName()+File.separator);
@@ -116,7 +116,7 @@ public class ModuleInfo
 
    public URL[] getJarURLs()
    {
-      String[] dependencies = this.getResourcePropertyArray("anbot.module.dependencies");
+      String[] dependencies = this.getResourcePropertyArray("anybot.module.dependencies");
       int depcount=0;
       if(dependencies!=null)
       {
@@ -132,7 +132,7 @@ public class ModuleInfo
          for(String dependency : dependencies)
          {
             String temp = dependency.replaceAll("\\{\\{moduledir\\}\\}", this.getModuleFolder().getAbsolutePath());
-            
+
             try {
                urls[i] = (new File(temp)).toURI().toURL();
             } catch (MalformedURLException ex) {

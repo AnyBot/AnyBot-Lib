@@ -25,11 +25,11 @@ public class ThreadPipes
    {
       this.insidereader = new PipedReader();
       this.outsidewriter = new PipedWriter();
-      this.outsidewriter.connect(this.insidereader);
+      this.insidereader.connect(this.outsidewriter);
 
       this.outsidereader = new PipedReader();
       this.insidewriter = new PipedWriter();
-      this.insidewriter.connect(this.outsidereader);
+      this.outsidereader.connect(this.insidewriter);
    }
 
 

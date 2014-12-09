@@ -35,10 +35,10 @@ public class ModuleUtils
       {
          @Override
          public boolean accept(File pathname) {
-            return pathname.getName().endsWith(".jar");
+            return pathname.getName().endsWith(".jar") && pathname.getName().startsWith("AnyBot-Module-");
          }
       });
-      return jars;
+      return jars==null ? new File[] {} : jars;
    }
 
    public static int getModuleCount()

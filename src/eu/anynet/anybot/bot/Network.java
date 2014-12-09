@@ -84,7 +84,7 @@ public class Network
             this.output = null;
          }
 
-         this.output = new Thread() {
+         this.output = new Thread("network-output-"+net.getKey()) {
             @Override
             public void run()
             {
@@ -92,7 +92,7 @@ public class Network
                   while(true)
                   {
                      String msg = net.botthread.getPipeEndpoint().receive();
-                     System.out.println("["+net.getHost()+"] "+msg);
+                     System.out.println("["+net.getKey()+"] "+msg);
                   }
                } catch (Exception ex) {  }
             }

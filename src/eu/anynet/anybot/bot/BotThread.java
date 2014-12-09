@@ -36,12 +36,14 @@ public class BotThread extends Thread
 
    // http://en.wikipedia.org/wiki/List_of_Internet_Relay_Chat_commands
 
+   private Thread botthread;
    private Bot bot;
    private final ThreadPipes pipes;
    private final Network network;
 
    public BotThread(Network network) throws IOException
    {
+      this.setName("network-worker-"+network.getKey());
       this.pipes = new ThreadPipes();
       this.network = network;
    }
@@ -94,7 +96,7 @@ public class BotThread extends Thread
 
                   // Find main class
                   ResourceBundle props = ResourceBundle.getBundle("anybotmodule", Locale.getDefault(), loader);
-                  final String isubClassName = props.getString("anbot.module.module");
+                  final String isubClassName = props.getString("anybot.module.module");
 
                   // Create instance and set data
                   Module sub = (Module) loader.loadClass(isubClassName).newInstance();
@@ -128,7 +130,7 @@ public class BotThread extends Thread
             @Override
             public void onConnect(ConnectEvent<Bot> event) throws Exception
             {
-               me.writePipeLine("Connected!");
+               me.writePipeLine("Connected");
 
                // Startup Commands
                if(me.network.getAfterConnectCommands().length>0)
@@ -139,6 +141,10 @@ public class BotThread extends Thread
                      event.getBot().sendRaw().rawLineNow(cmdstr);
                   }
                }
+
+               me.writePipeLine("Wait...");
+               Thread.sleep(3000);
+               me.writePipeLine("Wait done.");
 
                // Join Debug Channel
                if(me.network.isDebugChannelSet())
@@ -152,7 +158,7 @@ public class BotThread extends Thread
                {
                   for(String channel : joinedchannels)
                   {
-                     me.writePipeLine("Join "+channel);
+                     me.writePipeLine("Startup-Join "+channel);
                      if(!event.getBot().isBotInChannel(channel))
                      {
                         event.getBot().sendIRC().joinChannel(channel);
@@ -256,7 +262,7 @@ public class BotThread extends Thread
 
          });
 
-         this.bot.startBot();
+         this.startPircBotX();
 
          CommandLineParser parser = new CommandLineParser();
 
@@ -264,7 +270,7 @@ public class BotThread extends Thread
             @Override
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
-               me.writePipeLine("Join "+chan);
+               me.writePipeLine("Trying to join "+chan);
                bot.sendIRC().joinChannel(chan);
             }
          });
@@ -274,6 +280,7 @@ public class BotThread extends Thread
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
                //bot.partChannel(chan);
+               me.writePipeLine("Trying to part "+chan);
                bot.sendRaw().rawLineNow("PART "+chan);
             }
          });
@@ -302,18 +309,22 @@ public class BotThread extends Thread
 
          while(true)
          {
-            parser.handleCommandLine(this.readPipeLine());
+            String l = this.readPipeLine();
+            bot.sendDebug("[CONSOLE] "+l);
+            parser.handleCommandLine(l);
          }
 
       }
       catch(InterruptedIOException ex)
       {
-
+         Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
       }
       catch (IOException ex)
       {
          this.writePipeLine("Error: "+ex.getMessage());
-      } catch (IrcException ex) {
+      }
+      catch (IrcException ex)
+      {
          Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
       }
    }
@@ -321,13 +332,45 @@ public class BotThread extends Thread
    @Override
    public void interrupt()
    {
+      this.stopPircBotX();
+      super.interrupt();
+   }
+
+
+   private void startPircBotX()
+   {
+      final Bot b = this.bot;
+      this.botthread = new Thread("network-pircbotx-"+this.network.getKey()) {
+         @Override
+         public void run()
+         {
+            try {
+               b.startBot();
+            } catch (IOException | IrcException ex) {
+               Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
+            }
+         }
+      };
+
+      this.botthread.start();
+   }
+
+
+   private void stopPircBotX()
+   {
       if(this.bot.isConnected())
       {
          this.writePipeLine("Thread exited.");
          this.bot.stopBotReconnect();
          this.bot.sendIRC().quitServer("Bot is shutting down!");
       }
-      super.interrupt();
+
+      if(this.botthread!=null && (this.botthread.isAlive() || !this.botthread.isInterrupted()))
+      {
+         this.botthread.interrupt();
+         this.botthread=null;
+      }
+
    }
 
 
