@@ -55,6 +55,10 @@ public class Network
    @XmlElement(name = "JoinedChannel")
    private final ArrayList<String> joinedChannels;
 
+   @XmlElementWrapper(name = "EnabledModules")
+   @XmlElement(name = "Module")
+   private final ArrayList<String> enabledModules;
+
 
    public Network()
    {
@@ -62,6 +66,7 @@ public class Network
       this.afterConnectCommands = new ArrayList<>();
       this.beforeDisconnectCommands = new ArrayList<>();
       this.joinedChannels = new ArrayList<>();
+      this.enabledModules = new ArrayList<>();
       this.botthread = null;
       this.output = null;
    }
@@ -249,17 +254,27 @@ public class Network
       return this.joinedChannels.toArray(new String[] {  });
    }
 
+   public IRCCommand[] getAfterConnectCommands()
+   {
+      return this.afterConnectCommands.toArray(new IRCCommand[] {  });
+   }
+
+   public String[] getEnabledModules()
+   {
+      return this.enabledModules.toArray(new String[] {  });
+   }
+
+   public boolean isModuleEnabled(String name)
+   {
+      return this.enabledModules.contains(name);
+   }
+
    public void serialize()
    {
       if(this.networkstore!=null)
       {
          this.networkstore.serialize();
       }
-   }
-
-   public IRCCommand[] getAfterConnectCommands()
-   {
-      return this.afterConnectCommands.toArray(new IRCCommand[] {  });
    }
 
 

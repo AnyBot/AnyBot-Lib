@@ -48,8 +48,9 @@ public class Regex {
       return row;
     }
 
-    public static String findByRegex(String regex, String search, int match, int group) {
-        Pattern pattern = Pattern.compile(regex);
+    public static String findByRegex(String regex, String search, int match, int group, boolean dotall) {
+      int patternconfig = (dotall ? Pattern.CASE_INSENSITIVE+Pattern.DOTALL : Pattern.CASE_INSENSITIVE);
+      Pattern pattern = Pattern.compile(regex, patternconfig);
 		Matcher matcher = pattern.matcher(search);
         String result = null;
 
@@ -69,11 +70,15 @@ public class Regex {
     }
 
     public static String findByRegexFirst(String regex, String search) {
-        return findByRegex(regex, search, 1, 1);
+        return findByRegex(regex, search, 1, 1, false);
+    }
+
+    public static String findByRegexFirst(String regex, String search, boolean dotall) {
+        return findByRegex(regex, search, 1, 1, dotall);
     }
 
     public static String findByRegexLast(String regex, String search) {
-        return findByRegex(regex, search, -1, 1);
+        return findByRegex(regex, search, -1, 1, false);
     }
 
     	/**

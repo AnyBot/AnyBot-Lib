@@ -23,14 +23,14 @@ public abstract class CommandLineModuleBase implements CommandLineModule
    private CommandLineParser parser;
    private ArrayList<CommandLineListener> loadedCommands;
    private Object[] additionalobjects;
-   protected final SaveBoolean isEnabled;
+   protected final SafeBoolean isEnabled;
 
    public CommandLineModuleBase(CommandLineParser parser, Object[] additionalobjects)
    {
       this.parser = parser;
       this.additionalobjects = additionalobjects;
       this.loadedCommands = new ArrayList<>();
-      this.isEnabled = new SaveBoolean(false);
+      this.isEnabled = new SafeBoolean(false);
    }
 
    public Object getObjectAt(int i)

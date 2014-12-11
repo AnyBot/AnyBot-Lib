@@ -10,26 +10,21 @@ import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
 import static eu.anynet.java.util.Properties.properties;
-import eu.anynet.java.util.TimerTask;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.pircbotx.Configuration;
-import org.pircbotx.User;
 import org.pircbotx.exception.IrcException;
 import org.pircbotx.hooks.events.ConnectEvent;
-import org.pircbotx.hooks.events.InviteEvent;
 import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.KickEvent;
 import org.pircbotx.hooks.events.PartEvent;
-import org.pircbotx.hooks.events.UserListEvent;
 
 /**
  *
@@ -67,7 +62,7 @@ public class BotThread extends Thread
       return this.pipes.getInsideEndpoint().receive();
    }
 
-   private void writePipeLine(String message)
+   public synchronized void writePipeLine(String message)
    {
       if(this.bot!=null && this.bot.isConnected() && this.network.isDebugChannelSet())
       {
@@ -98,31 +93,36 @@ public class BotThread extends Thread
          {
             for(ModuleInfo mod : mods)
             {
-               try {
-                  // Init classloader
-                  URL[] jars = mod.getJarURLs();
-                  URLClassLoader loader = URLClassLoader.newInstance(jars);
-
-                  // Find main class
-                  ResourceBundle props = ResourceBundle.getBundle("anybotmodule", Locale.getDefault(), loader);
-                  final String isubClassName = props.getString("anybot.module.module");
-
-                  // Create instance and set data
-                  Module sub = (Module) loader.loadClass(isubClassName).newInstance();
-                  sub.mergeProperties(properties);
-                  sub.setModuleinfo(mod);
-                  sub.setThread(me);
-
-                  // Add to thread and launch!
-                  this.bot.addListener(sub);
-                  //config.getListenerManager().addListener(sub);
-                  sub.launch();
-
-                  me.writePipeLine("Load module successfull: "+mod.getName());
-               }
-               catch(ClassNotFoundException | InstantiationException | IllegalAccessException ex)
+               if(me.network.isModuleEnabled(mod.getName()))
                {
-                  me.writePipeLine("Load of module "+mod.getName()+" failed: "+ex.getMessage());
+
+                  try {
+                     // Init classloader
+                     URL[] jars = mod.getJarURLs();
+                     URLClassLoader loader = URLClassLoader.newInstance(jars);
+
+                     // Find main class
+                     ResourceBundle props = ResourceBundle.getBundle("anybotmodule", Locale.getDefault(), loader);
+                     final String isubClassName = props.getString("anybot.module.module");
+
+                     // Create instance and set data
+                     Module sub = (Module) loader.loadClass(isubClassName).newInstance();
+                     sub.mergeProperties(properties);
+                     sub.setModuleinfo(mod);
+                     sub.setThread(me);
+
+                     // Add to thread and launch!
+                     this.bot.addListener(sub);
+                     //config.getListenerManager().addListener(sub);
+                     //sub.launch();
+
+                     me.writePipeLine("Load module successfull: "+mod.getName());
+                  }
+                  catch(ClassNotFoundException | InstantiationException | IllegalAccessException ex)
+                  {
+                     me.writePipeLine("Load of module "+mod.getName()+" failed: "+ex.getMessage());
+                  }
+
                }
             }
          }

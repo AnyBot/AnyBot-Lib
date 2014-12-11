@@ -9,9 +9,8 @@ import java.util.ArrayList;
 import org.pircbotx.Channel;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
-import org.pircbotx.UtilSSLSocketFactory;
-import org.pircbotx.cap.TLSCapHandler;
 import org.pircbotx.exception.IrcException;
+import static eu.anynet.java.util.Properties.properties;
 
 /**
  *
@@ -29,7 +28,7 @@ public class Bot extends PircBotX
       Configuration config = new Configuration.Builder()
               .setLogin(networksettings.getBotIdent())
               .setVersion(networksettings.getBotRealname())
-              .setFinger("AnyBot 1.0")
+              .setFinger(properties.get("version"))
               .setName(networksettings.getBotNickname())
               .setServerHostname(networksettings.getHost())
               .setServerPort(networksettings.getPort())
@@ -52,6 +51,7 @@ public class Bot extends PircBotX
    {
       module.setBot(this);
       this.getConfiguration().getListenerManager().addListener(module);
+      module.launch();
    }
 
    public Network getNetworkSettings()
@@ -89,6 +89,7 @@ public class Bot extends PircBotX
       }
    }
 
+   /*
    public void addModule(Module newmod)
    {
       if(!this.modules.contains(newmod))
@@ -97,6 +98,7 @@ public class Bot extends PircBotX
          this.modules.add(newmod);
       }
    }
+   */
 
    public boolean isBotInChannel(String channel)
    {

@@ -23,6 +23,8 @@ public class ModuleInfo
    private final File modulefile;
    private final File settingsfolder;
 
+   public static final String MODULEPREFIX = "AnyBot-Module-";
+
    public ModuleInfo(File modulefile, File settingsfolder)
    {
       this.modulefile = modulefile;
@@ -39,9 +41,14 @@ public class ModuleInfo
       return this.modulefile.getName();
    }
 
-   public String getName()
+   public String getFullName()
    {
       return this.modulefile.getName().substring(0, this.modulefile.getName().lastIndexOf("."));
+   }
+
+   public String getName()
+   {
+      return this.getFullName().replaceFirst(MODULEPREFIX, "");
    }
 
    public File getSettingsFolder()
