@@ -8,6 +8,8 @@ package eu.anynet.anybot.bot;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -93,13 +95,23 @@ public class Network
             @Override
             public void run()
             {
-               try {
-                  while(true)
+               while(true)
+               {
+                  try
                   {
-                     String msg = net.botthread.getPipeEndpoint().receive();
-                     System.out.println("["+net.getKey()+"] "+msg);
+                        String msg = net.botthread.getPipeEndpoint().receive();
+                        System.out.println("["+net.getKey()+"] "+msg);
                   }
-               } catch (Exception ex) {  }
+                  catch (Exception ex)
+                  {
+                     Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
+                     try {
+                        Thread.sleep(5000);
+                     } catch (InterruptedException ex1) {
+                        break;
+                     }
+                  }
+               }
             }
          };
 

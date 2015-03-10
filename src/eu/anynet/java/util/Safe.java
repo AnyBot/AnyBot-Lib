@@ -25,4 +25,9 @@ public class Safe<T>
       this.value = val;
    }
 
+   public boolean isNull()
+   {
+      return this.value==null;
+   }
+
 }

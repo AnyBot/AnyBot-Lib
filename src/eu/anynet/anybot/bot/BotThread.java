@@ -6,6 +6,7 @@ package eu.anynet.anybot.bot;
 
 import eu.anynet.anybot.pircbotxextensions.MessageEventEx;
 import eu.anynet.java.uax.UaxApi;
+import eu.anynet.java.uax.UaxResult;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
@@ -219,6 +220,13 @@ public class BotThread extends Thread
                }
                else if(event.args().isBotAsked() && event.args().count()>1 && event.args().get(0).equalsIgnoreCase("short"))
                {
+                  String url = event.args().get(1);
+                  String userdef = null;
+                  if(event.args().count()>2)
+                  {
+                     userdef = event.args().get(2);
+                  }
+
                   UaxApi uax = UaxApi.initialize();
                   if(uax==null)
                   {
@@ -226,10 +234,11 @@ public class BotThread extends Thread
                   }
                   else
                   {
-                     String shortlink = uax.shortUrl(event.args().get(1));
+                     UaxResult shortlink = uax.shortUrl(url, userdef);
                      if(shortlink!=null)
                      {
-                        event.respond(shortlink);
+                        String userdeflink = shortlink.getUserdefLink();
+                        event.respond(shortlink.getShortLink()+(userdeflink!=null ? " aka "+userdeflink : ""));
                      }
                      else
                      {

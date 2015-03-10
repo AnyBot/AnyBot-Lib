@@ -64,7 +64,12 @@ public class UaxApi extends Serializable<UaxApi>
       return "uaxcredentials.xml";
    }
 
-   public String shortUrl(String url)
+   public UaxResult shortUrl(String url)
+   {
+      return this.shortUrl(url, null);
+   }
+
+   public UaxResult shortUrl(String url, String userdef)
    {
       if(this.apikey==null || this.apikey.equals("fillmeout"))
       {
@@ -75,12 +80,17 @@ public class UaxApi extends Serializable<UaxApi>
 
       try
       {
-         JSONObject result = HttpClient.toJsonObject(HttpClient.Post("http://krz.link/~api/add", Form.form().add("api_key", this.apikey).add("url", url)));
+         Form form = Form.form()
+                 .add("api_key", this.apikey)
+                 .add("url", url)
+                 .add("userdef", userdef);
+
+         JSONObject result = HttpClient.toJsonObject(HttpClient.Post("http://krz.link/~api/add", form));
          boolean success = result.get("success").toString().equals("true");
+
          if(success)
          {
-            JSONObject data = ((JSONObject)result.get("result"));
-            return data.get("shortlink").toString();
+            return new UaxResult(result);
          }
       }
       catch(IOException ex)
